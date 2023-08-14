@@ -1,12 +1,18 @@
-﻿
-using UnityEngine;
+﻿using UnityEngine;
 using System;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
+
+
+
 public class MessageReceiver : MonoBehaviour
 {
+
+    public bool patates = false;
+
+
     public string serverAddress = "localhost";
     public int serverPort = 12345;
 
@@ -24,7 +30,7 @@ public class MessageReceiver : MonoBehaviour
     private async void Start()
     {
         await ConnectToServerAsync();
-        await ReceiveMessagesAsync();
+        await CommunicationLoopAsync();
     }
 
     private async Task ConnectToServerAsync()
@@ -33,40 +39,51 @@ public class MessageReceiver : MonoBehaviour
         await client.ConnectAsync(serverAddress, serverPort);
     }
 
-    private async Task ReceiveMessagesAsync()
+    private async Task CommunicationLoopAsync()
     {
         while (client != null && client.Connected)
         {
+            // Mesaj gönderme
+            Message sendMessage = new Message
+            {
+                text = "Unity'den mesaj",
+                sayi = 42
+            };
+
+            string sendJson = JsonUtility.ToJson(sendMessage);
+            byte[] sendData = Encoding.ASCII.GetBytes(sendJson);
+
+            await client.GetStream().WriteAsync(sendData, 0, sendData.Length);
+
+            // Mesaj alma
             int bytesRead = await client.GetStream().ReadAsync(buffer, 0, buffer.Length);
             if (bytesRead == 0)
             {
-
                 break;
             }
 
-            string jsonData = Encoding.ASCII.GetString(buffer, 0, bytesRead);
+            string receivedJson = Encoding.ASCII.GetString(buffer, 0, bytesRead);
 
-            Message message = JsonUtility.FromJson<Message>(jsonData);
+            Message receivedMessage = JsonUtility.FromJson<Message>(receivedJson);
 
-            if (!string.IsNullOrEmpty(message.text))
+            if (!string.IsNullOrEmpty(receivedMessage.text))
             {
-                Debug.Log("Sunucudan gelen mesaj: " + message.text + " " + message.sayi);
+                Debug.Log("Sunucudan gelen mesaj: " + receivedMessage.text + " " + receivedMessage.sayi);
+            }
 
-                // Sunucuya cevap g�nderme
-                Message responseMessage = new Message
-                {
-                    text = "Unity'den gelen cevap",
-                    sayi = 42
-                };
-
-                string responseJson = JsonUtility.ToJson(responseMessage);
-                byte[] responseData = Encoding.ASCII.GetBytes(responseJson);
-
-                await client.GetStream().WriteAsync(responseData, 0, responseData.Length);
+            await Task.Delay(1000); // 1 saniye bekle
+            if (patates)
+            {
+                break;
             }
         }
 
-        //Debug.Log("Sunucu ba�lant�s� kapand�.");
-        //client.Close();
+        Debug.Log("Sunucu bağlantısı kapatıldı.");
+        client.Close();
     }
+
+
+
+
+
 }
