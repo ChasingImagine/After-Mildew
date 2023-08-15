@@ -1,31 +1,19 @@
-﻿using UnityEngine;
+﻿
+
+using UnityEngine;
 using System;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
-
-
-
 public class MessageReceiver : MonoBehaviour
 {
-
-    public bool patates = false;
-
+    private bool quit = false;
+    private TcpClient client;
+    private byte[] buffer = new byte[4096];
 
     public string serverAddress = "localhost";
     public int serverPort = 12345;
-
-    private TcpClient client;
-    private byte[] buffer = new byte[1024];
-    private StringBuilder receivedMessage = new StringBuilder();
-
-    [Serializable]
-    public class Message
-    {
-        public string text;
-        public int sayi;
-    }
 
     private async void Start()
     {
@@ -41,49 +29,45 @@ public class MessageReceiver : MonoBehaviour
 
     private async Task CommunicationLoopAsync()
     {
-        while (client != null && client.Connected)
+        while (!quit)
         {
-            // Mesaj gönderme
-            Message sendMessage = new Message
-            {
-                text = "Unity'den mesaj",
-                sayi = 42
-            };
+            // Send data to server
+            await SendDataToServerAsync();
 
-            string sendJson = JsonUtility.ToJson(sendMessage);
-            byte[] sendData = Encoding.ASCII.GetBytes(sendJson);
-
-            await client.GetStream().WriteAsync(sendData, 0, sendData.Length);
-
-            // Mesaj alma
+            // Receive data from server
             int bytesRead = await client.GetStream().ReadAsync(buffer, 0, buffer.Length);
             if (bytesRead == 0)
             {
                 break;
             }
 
-            string receivedJson = Encoding.ASCII.GetString(buffer, 0, bytesRead);
+            string receivedJson = Encoding.UTF8.GetString(buffer, 0, bytesRead);
 
-            Message receivedMessage = JsonUtility.FromJson<Message>(receivedJson);
+            Transforms receivedMessage = JsonUtility.FromJson<Transforms>(receivedJson);
 
-            if (!string.IsNullOrEmpty(receivedMessage.text))
+            if (receivedMessage.pozitions != null)
             {
-                Debug.Log("Sunucudan gelen mesaj: " + receivedMessage.text + " " + receivedMessage.sayi);
+                Debug.Log("Received Position - x: " + receivedMessage.pozitions.x + " y: " + receivedMessage.pozitions.y + " z: " + receivedMessage.pozitions.z);
             }
 
-            await Task.Delay(1000); // 1 saniye bekle
-            if (patates)
-            {
-                break;
-            }
+            await Task.Delay(1000); // Wait for 1 second before sending data again
         }
 
-        Debug.Log("Sunucu bağlantısı kapatıldı.");
+        Debug.Log("Server connection closed.");
         client.Close();
     }
 
+    private async Task SendDataToServerAsync()
+    {
+        Transforms dataToSend = new Transforms
+        {
+            pozitions = new Pozitions { x = transform.position.x, y = transform.position.y, z = transform.position.z },
+            rotations = new Rotations { x = transform.rotation.x, y = transform.rotation.y, z = transform.rotation.z }
+        };
 
+        string jsonData = JsonUtility.ToJson(dataToSend);
+        byte[] dataBytes = Encoding.UTF8.GetBytes(jsonData);
 
-
-
+        await client.GetStream().WriteAsync(dataBytes, 0, dataBytes.Length);
+    }
 }

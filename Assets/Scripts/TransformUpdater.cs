@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -6,7 +7,7 @@ public class TransformUpdater : MonoBehaviour
 {
     public Transform obje;
 
-    void Updateter( TransformProperty.Transforms newTransfoms)
+    void Setter( Transforms newTransfoms)
     {
         
         obje.position = new Vector3(newTransfoms.pozitions.x, newTransfoms.pozitions.y, newTransfoms.pozitions.z);
@@ -16,28 +17,27 @@ public class TransformUpdater : MonoBehaviour
 
 }
 
-public class TransformProperty
+
+[Serializable]
+
+public class Pozitions
 {
-
-
-    public class Pozitions
-    {
-        public float x, y, z;
-    }
-
-    public class Rotations
-    {
-        public float x, y, z;
-    }
-
-    public class Transforms
-    {
-        public Pozitions pozitions;
-        public Rotations rotations;
-    }
-
-    
-
-
+    public float x, y, z;
 }
 
+
+
+[Serializable]
+
+public class Rotations
+{
+    public float x, y, z;
+}
+
+
+[Serializable]
+public class Transforms
+{
+    public Pozitions pozitions;
+    public Rotations rotations;
+}
