@@ -5,9 +5,16 @@ using System;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
+using System.Threading;
+
+
 
 public class MessageReceiver : MonoBehaviour
 {
+
+    
+
+
     private bool quit = false;
     private TcpClient client;
     private byte[] buffer = new byte[4096];
@@ -15,8 +22,25 @@ public class MessageReceiver : MonoBehaviour
     public string serverAddress = "localhost";
     public int serverPort = 12345;
 
+
+
+    private void OnApplicationQuit()
+    {
+        quit = true;
+    }
+
+
+
+
+
+
+
+
+
+
     private async void Start()
     {
+       
         await ConnectToServerAsync();
         await CommunicationLoopAsync();
     }
@@ -43,12 +67,24 @@ public class MessageReceiver : MonoBehaviour
 
             string receivedJson = Encoding.UTF8.GetString(buffer, 0, bytesRead);
 
-            Transforms receivedMessage = JsonUtility.FromJson<Transforms>(receivedJson);
-
-            if (receivedMessage.pozitions != null)
+            Transforms receivedMessage = null;
+            try
             {
-                Debug.Log("Received Position - x: " + receivedMessage.pozitions.x + " y: " + receivedMessage.pozitions.y + " z: " + receivedMessage.pozitions.z);
+                receivedMessage = JsonUtility.FromJson<Transforms>(receivedJson);
             }
+            catch (System.Exception ex)
+            {
+                Debug.LogError("Veri alırken hata oluştu: " + ex.Message);
+            }
+           
+            if (receivedMessage != null)
+            {
+                if (receivedMessage.pozitions != null)
+                {
+                    Debug.Log("Received Position - x: " + receivedMessage.pozitions.x + " y: " + receivedMessage.pozitions.y + " z: " + receivedMessage.pozitions.z);
+                }
+            }
+            
 
             await Task.Delay(1000); // Wait for 1 second before sending data again
         }
@@ -59,15 +95,25 @@ public class MessageReceiver : MonoBehaviour
 
     private async Task SendDataToServerAsync()
     {
-        Transforms dataToSend = new Transforms
+        
+        Transforms PlayerTransform = new Transforms
         {
             pozitions = new Pozitions { x = transform.position.x, y = transform.position.y, z = transform.position.z },
             rotations = new Rotations { x = transform.rotation.x, y = transform.rotation.y, z = transform.rotation.z }
         };
 
+        Player dataToSend = new Player
+        {
+            id = "0",
+            transforms = PlayerTransform
+            
+        };
+
+
+
         string jsonData = JsonUtility.ToJson(dataToSend);
         byte[] dataBytes = Encoding.UTF8.GetBytes(jsonData);
-
+        
         await client.GetStream().WriteAsync(dataBytes, 0, dataBytes.Length);
     }
 }
