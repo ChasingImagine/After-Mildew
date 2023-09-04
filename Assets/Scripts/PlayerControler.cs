@@ -10,6 +10,7 @@ public class PlayerControler : MonoBehaviour
 
    
     public float move_Speed;
+    public float rotationSpeed;
     public Rigidbody Rb;
 
 
@@ -38,8 +39,12 @@ public class PlayerControler : MonoBehaviour
 
     private void FixedUpdate()
     {
-        Rb.AddForce(new Vector3(horizontal,  0, vertical) *move_Speed ,ForceMode.Force);
+        Rb.AddRelativeForce(new Vector3(0f,  0f, vertical) *move_Speed ,ForceMode.Impulse);
+        Vector3 rotation = new Vector3(0.0f, horizontal * rotationSpeed, 0.0f);
+        Rb.rotation *= Quaternion.Euler(rotation);
+        
     }
+
 
 
 }
