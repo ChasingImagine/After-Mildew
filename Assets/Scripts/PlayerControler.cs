@@ -22,7 +22,6 @@ public class PlayerControler : MonoBehaviour
     void Start()
     {
 
-            this.GetComponent<Rigidbody>().drag = 0.5f;
 
 
 

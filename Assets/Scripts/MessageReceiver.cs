@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Threading;
 using System.Collections.Generic;
 using Newtonsoft.Json;
+using System.Collections.Specialized;
 //using UnityEditor.Experimental.RestService;
 
 public class MessageReceiver : MonoBehaviour
@@ -113,21 +114,29 @@ public class MessageReceiver : MonoBehaviour
                 {
                     Dictionary<string,Player> players = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string,Player>>(receivedMessage["Players"]);
 
-                    
-                    // 1. sözlükte olup 2. sözlükte olmayan elemanları bulma
-                    Dictionary<string, Player> differenceDict1 = new Dictionary<string, Player>();
-                    foreach (var pair in playersOld)
+
+
+                   Dictionary<string,Player> difference = new Dictionary<string,Player>();
+
+
+                    foreach (var kvp in playersOld)
                     {
-                        if (!players.ContainsKey(pair.Key))
+                        if (!players.ContainsKey(kvp.Key))
                         {
-                            differenceDict1.Add(pair.Key, pair.Value);
+                            difference.Add(kvp.Key, kvp.Value);
                         }
                     }
 
-                    foreach (var pair in differenceDict1)
+                    Console.WriteLine("İlk sözlükte olup ikinci sözlükte olmayanlar:");
+                    foreach (var kvp in difference)
                     {
-                        playersMeneger.DeletePlayer(pair.Value);
+                        
+                        Console.WriteLine($"{kvp.Key}: {kvp.Value.id}");
+                        playersMeneger.DeletePlayer(kvp.Value.id);
                     }
+
+                    playersOld = players;
+
 
 
                     foreach (string key in players.Keys)
@@ -138,14 +147,7 @@ public class MessageReceiver : MonoBehaviour
                            
                            playersMeneger.CreateObject ( players[key]);
                         }
-                        else
-                        {
-                            Debug.Log("8888888888888888888888888888888");
-                            if (players[key] != null)
-                            {
-                                Debug.Log("vay anasını beee");
-                            }
-                        }
+                       
                     }
                 }
 
@@ -153,7 +155,7 @@ public class MessageReceiver : MonoBehaviour
             }
             
 
-            await Task.Delay(1000); // Wait for 1 second before sending data again
+            await Task.Delay(16); // Wait for 1 second before sending data again
         }
 
         Debug.Log("Server connection closed.");
@@ -162,11 +164,23 @@ public class MessageReceiver : MonoBehaviour
 
     private async Task SendDataToServerAsync()
     {
-        
+
+        float p_x = float.Parse(transform.position.x.ToString("F3"));
+        float p_y = float.Parse(transform.position.y.ToString("F3"));
+        float p_z = float.Parse(transform.position.z.ToString("F3"));
+        /*
+        float r_x = float.Parse(transform.localRotation.x.ToString("F3"));
+        float r_y = float.Parse(transform.localRotation.y.ToString("F3"));
+        float r_z = float.Parse(transform.localRotation.z .ToString("F3"));
+        */
+        this.transform.position = new Vector3(p_x, p_y, p_z);
+       
         Transforms PlayerTransform = new Transforms
         {
-            pozitions = new Pozitions { x = transform.position.x, y = transform.position.y, z = transform.position.z },
-            rotations = new Rotations { x = transform.localRotation.x, y = transform.localRotation.y, z = transform.localRotation.z }
+       
+
+        pozitions = new Pozitions { x = p_x, y = p_y, z =  p_z},
+        rotations = new Rotations { x = this.transform.rotation.eulerAngles.x, y = this.transform.rotation.eulerAngles.y, z = this.transform.rotation.eulerAngles.z}
         };
 
         Player PlayerToSend = new Player

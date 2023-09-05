@@ -49,9 +49,9 @@ public class PlayersMeneger : MonoBehaviour
         }
     }
 
-    public void DeletePlayer(Player player)
+    public void DeletePlayer(string id)
     {
-        Destroy(objectDictionary[player.id]);
-        objectDictionary.Remove(player.id);
+        Destroy(objectDictionary[id]);
+        objectDictionary.Remove(id);
     }
 }
