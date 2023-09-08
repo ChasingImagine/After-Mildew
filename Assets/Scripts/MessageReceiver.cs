@@ -17,6 +17,7 @@ public class MessageReceiver : MonoBehaviour
     
 
 
+
     private bool quit = false;
     private TcpClient client;
     private byte[] buffer = new byte[4096];
