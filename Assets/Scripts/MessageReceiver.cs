@@ -9,15 +9,16 @@ using System.Threading;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using System.Collections.Specialized;
+using Unity.VisualScripting;
 //using UnityEditor.Experimental.RestService;
 
 public class MessageReceiver : MonoBehaviour
 {
 
-    
 
 
 
+    [SerializeField] int playertype = 2;
     private bool quit = false;
     private TcpClient client;
     private byte[] buffer = new byte[4096];
@@ -27,7 +28,7 @@ public class MessageReceiver : MonoBehaviour
     public PlayersMeneger playersMeneger;
 
 
-    string id = "";
+    public static string id = "";
     private Dictionary<string,Player> playersOld = new Dictionary<string,Player>();
 
     private void OnApplicationQuit()
@@ -156,7 +157,7 @@ public class MessageReceiver : MonoBehaviour
             }
             
 
-            await Task.Delay(16); // Wait for 1 second before sending data again
+            await Task.Delay(16); // Wait for 16 micro second before sending data again
         }
 
         Debug.Log("Server connection closed.");
@@ -174,7 +175,7 @@ public class MessageReceiver : MonoBehaviour
         float r_y = float.Parse(transform.localRotation.y.ToString("F3"));
         float r_z = float.Parse(transform.localRotation.z .ToString("F3"));
         */
-        this.transform.position = new Vector3(p_x, p_y, p_z);
+       
        
         Transforms PlayerTransform = new Transforms
         {
@@ -187,17 +188,36 @@ public class MessageReceiver : MonoBehaviour
         Player PlayerToSend = new Player
         {
             id = id,
-            transforms = PlayerTransform
+            transforms = PlayerTransform,
+            playerTypes = playertype,
             
+
+
         };
+        if (PlayerToSend.playerTypes == 0)
+        {
+            return;
+        }
+        
+        
+    
 
         Dictionary<string,Player> dataToSend = new Dictionary<string,Player>();
         dataToSend.Add("Palyer", PlayerToSend);
 
         string jsonData = JsonConvert.SerializeObject(dataToSend);
         byte[] dataBytes = Encoding.UTF8.GetBytes(jsonData);
-        
+
+        Dictionary<string, Player> p = new Dictionary<string, Player>();
+          p =  JsonConvert.DeserializeObject<Dictionary<string,Player>>(jsonData);
+        if (p["Palyer"].playerTypes == 0)
+        {
+            Debug.Log("oyuncu türü hatası");
+        }
+
         await client.GetStream().WriteAsync(dataBytes, 0, dataBytes.Length);
+
+
     }
 }
 

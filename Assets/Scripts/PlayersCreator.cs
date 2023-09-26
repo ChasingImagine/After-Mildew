@@ -9,6 +9,7 @@ public class PlayersCreator : MonoBehaviour
     
     void PlayersCreate()
     {
+      
         Vector3 spawnPosition = new Vector3(0f, 0f, 0f); //  konum
         Quaternion spawnRotation = Quaternion.identity; //  rotasyon
         GameObject spawnedPrefab = Instantiate(prefabToSpawn, spawnPosition, spawnRotation);

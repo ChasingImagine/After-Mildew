@@ -12,6 +12,7 @@ public class Player
 {
    public  string id;
    public  Transforms transforms;
+   public int playerTypes;
 }
 
 

@@ -20,6 +20,7 @@ public class PanelManeger : MonoBehaviour
             PlayerPrefs.SetInt("port", Convert.ToInt32(port.text));
         }catch(System.Exception e)
         {
+            Debug.Log(e.ToString());
             PlayerPrefs.SetString("ip", "0");
             PlayerPrefs.SetInt("port", 0);
             ip.text = null;
